@@ -6,7 +6,14 @@
 
 module.exports = function extract_order() {
   try {
-    // Scrape order details and Create Order object.
+    setTimeout(() => {
+      let orderNumber = "";
+      const orderNumberMatch = document.body.textContent.match(/Order\s?#(\d+)/);
+      if (orderNumberMatch) {
+        orderNumber = orderNumberMatch[1];
+      }
+      console.log("order number:", orderNumber);
+      }, 1000);
   } catch (e) {
     console.error(e);
   }
