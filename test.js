@@ -48,7 +48,7 @@ describe("#extractOrder", () => {
   beforeEach((done) => {
     document.body.innerHTML = fs.readFileSync(
       path.join(__dirname, "walmart_order.html"),
-      "utf-8"
+      "utf-8",
     );
 
     // Listen for event

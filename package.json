@@ -1,7 +1,8 @@
 {
   "name": "fillr-test-d",
   "scripts": {
-    "test": "./test"
+    "test": "./test",
+    "format": "prettier --write ."
   },
   "jest": {
     "testEnvironment": "jsdom"
@@ -9,5 +10,8 @@
   "dependencies": {
     "jest-environment-jsdom": "^29.7.0",
     "jsdom": "^26.1.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
   }
 }
