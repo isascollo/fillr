@@ -38,6 +38,22 @@ module.exports = function extract_order() {
       return match ? match[1] : "";
     };
 
+    const extractTax = (subtotal, grandTotal) => {
+      if (!subtotal || !grandTotal) return "";
+      const tax = parseFloat(grandTotal) - parseFloat(subtotal);
+      return tax.toFixed(2);
+    };
+
+    const extractShipping = (subtotal, grandTotal, tax) => {
+      const cartTotal = parseFloat(grandTotal);
+      const sub = parseFloat(subtotal);
+      const t = parseFloat(tax);
+
+      if ([cartTotal, sub, t].some(isNaN)) return "";
+      const shipping = cartTotal - sub - t;
+      return shipping.toFixed(2);
+    };
+
     const extractPaymentType = () => {
       const img = document.querySelector(
         'img[alt*="Visa"], img[alt*="MasterCard"], img[alt*="Amex"]',
@@ -51,14 +67,21 @@ module.exports = function extract_order() {
       return PaymentType.UNKNOWN;
     };
 
+    const orderNumber = extractOrderNumber();
+    const grandTotal = extractGrandTotal();
+    const subtotal = extractSubtotal();
+    const tax = extractTax(subtotal, grandTotal);
+    const shipping = extractShipping(subtotal, grandTotal, tax);
+    const paymentType = extractPaymentType();
+
     const order = {
-      "Order Number": extractOrderNumber(),
+      "Order Number": orderNumber,
       Products: [],
-      Shipping: "0",
-      Subtotal: extractSubtotal(),
-      "Grand Total": extractGrandTotal(),
-      Tax: "",
-      "Payment Type": extractPaymentType(),
+      Shipping: shipping,
+      Subtotal: subtotal,
+      "Grand Total": grandTotal,
+      Tax: tax,
+      "Payment Type": paymentType,
     };
 
     console.log(order);
