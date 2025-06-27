@@ -45,11 +45,18 @@ module.exports = function extract_order() {
     };
 
     const extractShipping = (subtotal, grandTotal, tax) => {
+      const text = getTextContent().toLowerCase();
+
+      if (text.includes("free shipping")) {
+        return "0";
+      }
+
       const cartTotal = parseFloat(grandTotal);
       const sub = parseFloat(subtotal);
       const t = parseFloat(tax);
 
       if ([cartTotal, sub, t].some(isNaN)) return "";
+
       const shipping = cartTotal - sub - t;
       return shipping.toFixed(2);
     };
@@ -67,16 +74,50 @@ module.exports = function extract_order() {
       return PaymentType.UNKNOWN;
     };
 
+    const extractProducts = () => {
+      const iframeSrc = document.querySelector(
+        'iframe[src*="tap.walmart.com"]',
+      )?.src;
+      if (!iframeSrc) return [];
+
+      const params = new URLSearchParams(iframeSrc.split("?")[1]);
+      const prices = params.get("item_prices")?.split(",") || [];
+      const quantities =
+        params
+          .get("item_quantities")
+          ?.split(",")
+          .map((q) => parseInt(q)) || [];
+
+      const productImgs = Array.from(
+        document.querySelectorAll('[data-testid="collapsedItemList"] img[alt]'),
+      );
+
+      return productImgs.map((img, index) => {
+        const name = img.alt.trim();
+        const unitPrice = prices[index] || "0.00";
+        const quantity = quantities[index] || 1;
+        const lineTotal = (parseFloat(unitPrice) * quantity).toFixed(2);
+
+        return {
+          "Product Name": name,
+          "Unit Price": unitPrice,
+          Quantity: quantity.toString(),
+          "Line Total": lineTotal,
+        };
+      });
+    };
+
     const orderNumber = extractOrderNumber();
     const grandTotal = extractGrandTotal();
     const subtotal = extractSubtotal();
     const tax = extractTax(subtotal, grandTotal);
     const shipping = extractShipping(subtotal, grandTotal, tax);
     const paymentType = extractPaymentType();
+    const products = extractProducts();
 
     const order = {
       "Order Number": orderNumber,
-      Products: [],
+      Products: products,
       Shipping: shipping,
       Subtotal: subtotal,
       "Grand Total": grandTotal,
@@ -84,7 +125,8 @@ module.exports = function extract_order() {
       "Payment Type": paymentType,
     };
 
-    console.log(order);
+    const event = new CustomEvent("order_details", { detail: order });
+    document.dispatchEvent(event);
   } catch (e) {
     console.error(e);
   }
