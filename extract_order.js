@@ -18,6 +18,16 @@ module.exports = function extract_order() {
     const text = getTextContent();
     if (!text) throw new Error("DOM not ready");
 
+    // subtotal only in querystring in url
+    const extractSubtotal = () => {
+      const iframeSrc = document.querySelector(
+        'iframe[src*="tap.walmart.com"]',
+      )?.src;
+      return (
+        new URLSearchParams(iframeSrc?.split("?")[1]).get("subtotal") || ""
+      );
+    };
+
     const extractOrderNumber = () => {
       const match = text.match(/Order\s?#(\d+)/);
       return match ? match[1] : "";
@@ -45,7 +55,7 @@ module.exports = function extract_order() {
       "Order Number": extractOrderNumber(),
       Products: [],
       Shipping: "0",
-      Subtotal: "",
+      Subtotal: extractSubtotal(),
       "Grand Total": extractGrandTotal(),
       Tax: "",
       "Payment Type": extractPaymentType(),
